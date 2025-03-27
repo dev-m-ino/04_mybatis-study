@@ -2,33 +2,91 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="Menu"> <!--namespace : Mapper 파일 식별을 위한 이름 -->
-    <insert id="insert" parameterType="com.ino.dto.MenuDto" useGeneratedKeys="true" keyProperty="menuCode">
+<mapper namespace="com.ino.section02.mapper_interface.MenuMapper">
+    <insert id="insertMenu" parameterType="Menu">
         INSERT INTO
             tbl_menu
-            (
-              menu_name
-            , menu_price
-            , category_code
-            , orderable_status
-            )
+                (
+                      menu_name
+                    , menu_price
+                    , orderable_status
+                )
         VALUES
-            (
-              #{menuName}
-            , #{menuPrice}
-            , #{categoryCode}
-            , #{orderableStatus}
-            )
+                (
+                      #{menuName}
+                    , #{menuPrice}
+                    , #{orderableStatus}
+                )
     </insert>
 
-    <select id="selectList" resultType="com.ino.dto.MenuDto">
+    <resultMap id="menuMap" type="Menu">
+        <id column="menu_code" property="menuCode"/>
+        <result column="menu_name" property="menuName"/>
+        <result column="menu_price" property="menuPrice"/>
+        <result column="category_code" property="categoryCode"/>
+        <result column="orderable_status" property="orderableStatus"/>
+    </resultMap>
+    <select id="selectMenu" resultMap="menuMap">
+        SELECT
+        menu_code
+        , menu_name
+        , menu_price
+        , category_code
+        , orderable_status
+        FROM
+        tbl_menu
+    </select>
+    <select id="selectMenuByCode" parameterType="_int" resultMap="menuMap">
+        SELECT
+        menu_code
+        , menu_name
+        , menu_price
+        , category_code
+        , orderable_status
+        FROM
+            tbl_menu
+        WHERE
+            menu_code = #{code}
+    </select>
+    <select id="selectUnderCostCount" parameterType="_int" resultType="_int">
+        SELECT
+            COUNT(*)
+        FROM
+            tbl_menu
+        WHERE
+            menu_price<![CDATA[<=]]>#{menuPrice}
+    </select>
+    <select id="selectMenuByCategory" parameterType="string" resultMap="menuMap">
         SELECT
               menu_code
             , menu_name
             , menu_price
-            , category_code
+            , m.category_code
             , orderable_status
         FROM
-            tbl_menu
+            tbl_menu m
+        JOIN tbl_category c ON c.category_code = m.category_code
+        WHERE
+            category_name = #{cate};
     </select>
+
+    <update id="updateMenuByCode" parameterType="Menu">
+        UPDATE
+            tbl_menu
+        SET
+              menu_name = #{menuName}
+            , menu_price = #{menuPrice}
+            , category_code = #{categoryCode}
+            , orderable_status = #{orderableStatus}
+        WHERE
+            menu_code = #{menuCode}
+    </update>
+
+    <delete id="deleteMenuByCode" parameterType="_int">
+        DELETE
+        FROM
+            tbl_menu
+        WHERE
+            menu_code = #{code}
+    </delete>
 </mapper>

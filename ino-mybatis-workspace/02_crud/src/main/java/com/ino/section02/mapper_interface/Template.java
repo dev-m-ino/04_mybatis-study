@@ -1,4 +1,4 @@
-package com.ino.section01.xml;
+package com.ino.section02.mapper_interface;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
