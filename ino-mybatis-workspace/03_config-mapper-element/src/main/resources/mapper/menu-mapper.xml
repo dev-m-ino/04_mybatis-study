@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ino.dao.MenuMapper">
+    <resultMap id="menuMap1" type="Menu">
+        <id column="menu_code" property="menuCode"/>
+        <result column="menu_name" property="menuName"/>
+        <result column="menu_price" property="menuPrice"/>
+    </resultMap>
+    <resultMap id="menuMap2" type="Menu" extends="menuMap1">
+        <result column="category_code" property="categoryCode"/>
+        <result column="orderable_status" property="orderableStatus"/>
+    </resultMap>
+<!--    <resultMap id="menuMap" type="Menu">-->
+<!--        <id column="menu_code" property="menuCode"/>-->
+<!--        <result column="menu_name" property="menuName"/>-->
+<!--        <result column="menu_price" property="menuPrice"/>-->
+<!--        <result column="category_code" property="categoryCode"/>-->
+<!--        <result column="orderable_status" property="orderableStatus"/>-->
+<!--    </resultMap>-->
+    <select id="getAllMenuCodeNamePrice" resultMap="menuMap1">
+        SELECT
+              menu_code
+            , menu_name
+            , menu_price
+        FROM
+            tbl_menu
+        WHERE
+            orderable_status = 'Y'
+    </select>
+    <select id="getAllMenuList" resultMap="menuMap2">
+        SELECT
+              menu_code
+            , menu_name
+            , menu_price
+            , category_code
+            , orderable_status
+        FROM
+            tbl_menu
+    </select>
+<!--    <resultMap id="menuResultMap3" type="Menu">-->
+<!--        <id column="menu_code" property="menuCode"/>-->
+<!--        <result column="menu_name" property="menuName"/>-->
+<!--        <result column="menu_price" property="menuPrice"/>-->
+
+<!--        <association property="categoryDto" javaType="Category">-->
+<!--            <id column="category_code" property="categoryCode"/>-->
+<!--            <result column="category_name" property="categoryName"/>-->
+<!--            <result column="ref_category_code" property="refCategoryCode"/>-->
+<!--        </association>-->
+<!--    </resultMap>-->
+    <resultMap id="categoryDto" type="Category">
+        <id column="category_code" property="categoryCode"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="ref_category_code" property="refCategoryCode"/>
+    </resultMap>
+    <resultMap id="menuResultMap3" type="Menu">
+        <id column="menu_code" property="menuCode"/>
+        <result column="menu_name" property="menuName"/>
+        <result column="menu_price" property="menuPrice"/>
+        <association property="categoryDto" resultMap="categoryDto"/>
+    </resultMap>
+    <select id="testResultMapAssociation" resultMap="menuResultMap3">
+        SELECT
+              menu_code
+            , menu_name
+            , menu_price
+            , m.category_code
+            , category_name
+            , ref_category_code
+        FROM
+            tbl_menu m
+                JOIN tbl_category c ON c.category_code = m.category_code
+        WHERE
+            orderable_status = 'Y'
+    </select>
+    <resultMap id="orderMenuResultMap" type="OrderMenu">
+        <result column="order_code" property="orderCode"/>
+        <result column="menu_code" property="menuCode"/>
+        <result column="order_amount" property="orderAmount"/>
+    </resultMap>
+<!--    <resultMap id="orderResultMap" type="Order">-->
+<!--        <id column="order_code" property="orderCode"/>-->
+<!--        <result column="order_date" property="orderDate"/>-->
+<!--        <result column="order_time" property="orderTime"/>-->
+<!--        <result column="total_order_price" property="totalOrderPrice"/>-->
+
+<!--        <collection property="orderMenuDtoList" ofType="OrderMenu">-->
+<!--            <result column="menu_code" property="menuCode"/>-->
+<!--            <result column="order_amount" property="orderAmount"/>-->
+<!--        </collection>-->
+<!--    </resultMap>-->
+    <resultMap id="orderResultMap" type="Order">
+        <id column="order_code" property="orderCode"/>
+        <result column="order_date" property="orderDate"/>
+        <result column="order_time" property="orderTime"/>
+        <result column="total_order_price" property="totalOrderPrice"/>
+
+        <collection property="orderMenuDtoList" resultMap="orderMenuResultMap"/>
+    </resultMap>
+    <select id="testResultMapCollection" resultMap="orderResultMap">
+        SELECT
+              o.order_code
+            , o.order_date
+            , o.order_time
+            , o.total_order_price
+            , om.menu_code
+            , om.order_amount
+        FROM
+            tbl_order o
+                JOIN tbl_order_menu om ON om.order_code = o.order_code
+        WHERE
+            o.order_code = #{code}
+    </select>
+    <sql id="columns">
+          menu_code
+        , menu_name
+        , menu_price
+        , category_code
+        , orderable_status
+    </sql>
+
+    <select id="selectMenuByCode" resultMap="menuMap2">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            tbl_menu
+        WHERE
+            menu_code = #{code}
+    </select>
+
+
+    <insert id="insertCategory" parameterType="Menu" useGeneratedKeys="true" keyProperty="categoryCode">
+<!--        <selectKey order="AFTER" keyProperty="categoryCode" resultType="_int">-->
+<!--            SELECT LAST_INSERT_ID()-->
+<!--        </selectKey>-->
+        INSERT INTO
+            tbl_category
+            (
+              category_name
+            , ref_category_code
+            )
+        VALUES
+            (
+              #{categoryDto.categoryName}
+            , #{categoryDto.refCategoryCode}
+            )
+    </insert>
+
+    <insert id="insertMenu" parameterType="Menu" useGeneratedKeys="true" keyProperty="menuCode">
+        INSERT INTO
+            tbl_menu
+            (
+              menu_name
+            , menu_price
+            , category_code
+            , orderable_status
+            )
+        VALUES
+            (
+              #{menuName}
+            , #{menuPrice}
+            , #{categoryCode}
+            , #{orderableStatus}
+            )
+    </insert>
+</mapper>
+
+
+        <!--
+    
+    *  주요 태그 종류
+    1. <select> : select문 작성
+    2. <insert> : insert문 작성
+    3. <update> : update문 작성
+    4. <delete> : delete문 작성
+    5. <resultMap> : 조회된 한 행을 매핑시킬 타입 지정
+                     주로 DTO에 매핑시킬때 사용
+
+    *  주요 속성 종류
+    1. id : 해당 sql문의 식별자 (필수)
+    2. parameterType : 해당 sql문으로 전달되는 파라미터 타입 (선택)
+        ex) parameterType="_int"
+            parameterType="string"
+            parameterType="map"
+            parameterType="com.kangbroo.model.dto.MenuDto" (Alias 미등록시)
+            parameterType="MenuDto" (Alias 등록시)
+    3. resultType : select문 실행 결과 한 row에 대한 타입 (dml문일 경우 미작성)
+        ex) 위의 parameterType과 유사
+    4. resultMap  : select문 실행 결과 한 row에 대해 어떤 resultMap을 참조시킬껀지 resultMap의 id작성 (dml문일 경우 미작성)
+
+    *  주요 MyBatis 내장 별칭
+         자바   |   마이바티스
+       ========================
+         int    |    _int
+        String  |   string
+         List   |    list
+         Map    |     map
+
+    *  파라미터 바인딩 (#{}, ${})
+       만일 sql문으로 전달된 데이터가 있을 경우 파라미터 설정하기
+
+    1. #{} : ?와 같은 역할을 수행하며 내부적으로 PreparedStatement 방식으로 값 처리함
+             해당 값의 타입에 맞춰 값이 바인딩됨
+
+           case 1. code 변수(10)에 숫자가 담겨 넘어올 경우  => #{변수}
+                    #{code}  ==  10
+           case 2. Map{name:"홍길동", age:17}이 넘어올 경우 => #{키}
+                    #{name}  ==  '홍길동'
+                    #{age}   ==  17
+           case 3. MenuDto{menuCode:12, menuName:"음식"} 이 넘어올 경우 => #{필드}
+                    #{menuCode} == 12
+                    #{menuName} == '음식'
+
+    2. ${} : sql문의 메타데이터(테이블명, 컬럼명, sql자체)를 처리할 때 사용함
+             실제 데이터 값을 바인딩할 때 사용하면 SQL Injection에 취약함
+
+            ex) Map{tableName:"tbl_menu", columnName:"menu_name"} 이 넘어올 경우
+                    SELECT * FROM  WHERE  = '열무'
+                    => SELECT * FROM tbl_menu WHERE menu_name = '열무'   로 완성됨
+
+-->
